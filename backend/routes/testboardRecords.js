@@ -122,6 +122,7 @@ router.post('/sn-check', async (req, res) => {
     const query = `
       SELECT DISTINCT ON (sn)
         sn,
+        pn,
         history_station_start_time AS pass_time
       FROM testboard_master_log
       WHERE sn = ANY($1)
