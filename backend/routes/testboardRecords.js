@@ -58,7 +58,7 @@ router.post('/most-recent-fail', async (req, res) => {
 
         SELECT
           sn,
-          'NA' AS error_code,
+          'EC-WS' AS error_code,
           history_station_start_time AS fail_time
         FROM workstation_master_log
         WHERE sn = ANY($1)
