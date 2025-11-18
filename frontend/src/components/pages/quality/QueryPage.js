@@ -11,6 +11,7 @@ import { Header } from '../../pagecomp/Header.jsx';
 import { DateRange } from '../../pagecomp/DateRange.jsx';
 import { paperStyle } from '../../theme/themes.js';
 import { toUTCDateString } from '../../../utils/dateUtils.js';
+import { FixedSizeList as List} from 'react-window';
 
 // CONSTANTS & CONFIGURATION
 const API_BASE = process.env.REACT_APP_API_BASE;
@@ -267,6 +268,88 @@ export const QueryPage = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  const VirtualizedResults = ({ fields, rows, height = 520, rowHeight = 36 }) => {
+    const colMin = 150; // min px per column for readability
+    const gridMinWidth = fields.length * colMin;
+    const colTemplate = `repeat(${fields.length}, minmax(${colMin}px, 1fr))`;
+
+    const Row = ({ index, style }) => {
+      const row = rows[index];
+      return (
+        <Box
+          role="row"
+          style={style}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: colTemplate,
+            alignItems: 'center',
+            borderBottom: '1px solid #eee',
+            px: 1,
+            whiteSpace: 'nowrap',
+            '&:hover': { backgroundColor: 'rgba(0,0,0,0.03)' }
+          }}
+        >
+          {fields.map((f, i) => (
+            <Box
+              key={i}
+              role="cell"
+              sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', pr: 1 }}
+              title={row[f.name] != null ? String(row[f.name]) : ''}
+            >
+              {row[f.name] != null ? String(row[f.name]) : ''}
+            </Box>
+          ))}
+        </Box>
+      );
+    };
+
+    return (
+      <Box sx={{ width: '100%', overflow: 'auto', border: '1px solid #ddd', borderRadius: 1 }}>
+        {/* sticky header */}
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1,
+            backgroundColor: 'grey.100',
+            borderBottom: '1px solid #ddd'
+          }}
+        >
+          <Box
+            role="row"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: colTemplate,
+              fontWeight: 'bold',
+              px: 1,
+              py: 1,
+              minWidth: gridMinWidth
+            }}
+          >
+            {fields.map((f, i) => (
+              <Box key={i} role="columnheader" sx={{ pr: 1 }}>
+                {f.name}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* virtualized body */}
+        <Box sx={{ height, minWidth: gridMinWidth }}>
+          <List
+            height={height}
+            itemCount={rows.length}
+            itemSize={rowHeight}
+            width="100%"
+          >
+            {Row}
+          </List>
+        </Box>
+      </Box>
+    );
+  };
+
   
   // RENDER
   return (
@@ -359,59 +442,65 @@ export const QueryPage = () => {
       
       {/* Results Display Section */}
       <Box>
-        <Paper sx={paperStyle}>
-          {output?.success && output?.rows?.length > 0 ? (
-            <Box sx={{ overflowX: 'auto' }}>
-              {/* Results Metadata */}
-              <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-                {output.rowCount} rows returned in {output.executionTime}
-              </Typography>
-              
-              {/* Results Table */}
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    {output.fields.map((field, index) => (
-                      <th
-                        key={index}
-                        style={{
-                          border: '1px solid #ddd',
-                          padding: '8px',
-                          backgroundColor: '#f2f2f2',
-                          textAlign: 'left',
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        {field.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {output.rows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {output.fields.map((field, colIndex) => (
-                        <td
-                          key={colIndex}
+        {output?.success && output?.rows?.length > 0 ? (
+          <Box sx={{ overflowX: 'auto', overflowY: 'auto' }}>
+            <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+              {output.rowCount} rows returned in {output.executionTime}
+            </Typography>
+
+            {output.rows.length > 100 ? (
+              // Virtualized for large result sets
+              <VirtualizedResults fields={output.fields} rows={output.rows} />
+            ) : (
+              // Regular table with a scroll container for comfort
+              <Box sx={{ maxHeight: 520, overflow: 'auto', border: '1px solid #ddd', borderRadius: 1 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 1, background: '#f2f2f2' }}>
+                    <tr>
+                      {output.fields.map((field, index) => (
+                        <th
+                          key={index}
                           style={{
                             border: '1px solid #ddd',
-                            padding: '8px'
+                            padding: '8px',
+                            textAlign: 'left',
+                            fontWeight: 'bold'
                           }}
                         >
-                          {row[field.name] !== null && row[field.name] !== undefined
-                            ? String(row[field.name])
-                            : ''}
-                        </td>
+                          {field.name}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Box>
-          ) : (
-            <Typography>Query Output Here</Typography>
-          )}
-        </Paper>
+                  </thead>
+                  <tbody>
+                    {output.rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {output.fields.map((field, colIndex) => (
+                          <td
+                            key={colIndex}
+                            style={{
+                              border: '1px solid #ddd',
+                              padding: '8px',
+                              whiteSpace: 'nowrap',
+                              textOverflow: 'ellipsis',
+                              overflow: 'hidden',
+                              maxWidth: 320
+                            }}
+                            title={row[field.name] != null ? String(row[field.name]) : ''}
+                          >
+                            {row[field.name] != null ? String(row[field.name]) : ''}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+            )}
+          </Box>
+        ) : (
+          <Typography>Query Output Here</Typography>
+        )}
         
         {/* Export Button */}
         <Button onClick={handleExport} variant="contained">

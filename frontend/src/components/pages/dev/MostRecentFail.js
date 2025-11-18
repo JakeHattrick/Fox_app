@@ -160,13 +160,19 @@ export const MostRecentFail = () => {
       acc[row.sn] = row;
       return acc;
     }, {});
+    const snpn = snData.reduce((acc, row) => {
+      acc[row.pn] = row;
+      return acc;
+    },{});
 
     return csvData.map(row => {
       const match = lookup[row.sn];
       const check = checkup[row.sn];
       const sn = snup[row.sn];
+      const pn = snpn[row.sn];
       return {
         ...row,
+        pn: pn ? pn : 'NA',
         error_code: match ? cleanCode(match.error_code) : passCheck ? check ? "Passed":sn?"Pending":"Missing": sn?"Passed":"Missing",
         fail_time: match ? match.fail_time : passCheck ? check ? check.pass_time:sn?"Pending":"Missing": sn?"NA":"Missing"
       };
@@ -284,7 +290,7 @@ export const MostRecentFail = () => {
             <Typography>Missing: {mergedDate.filter(i=>i.error_code==="Missing").length}</Typography>
           </Box>
           {mergedDate.map(row => (
-              <Typography sx={{backgroundColor:getBG(row['error_code'])}}>{row['sn']}: {row['error_code']}: {row['fail_time']}</Typography>
+              <Typography sx={{backgroundColor:getBG(row['error_code'])}}>{row['sn']}: {row['pn']}: {row['error_code']}: {row['fail_time']}</Typography>
           ))}
         </>
       ) : (
