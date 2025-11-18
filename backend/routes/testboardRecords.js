@@ -41,8 +41,8 @@ router.post('/most-recent-fail', async (req, res) => {
     const query = `
       SELECT DISTINCT ON (sn)
         sn,
-        failure_reasons AS error_code,
-        history_station_start_time AS fail_time
+        error_code,
+        fail_time
       FROM (
         SELECT
           sn,
@@ -68,7 +68,7 @@ router.post('/most-recent-fail', async (req, res) => {
       ) AS combined
       ORDER BY
         sn,
-        history_station_start_time DESC;
+        fail_time DESC;
     `;
 
     const params = [sns, startDate, endDate];
@@ -101,7 +101,7 @@ router.post('/pass-check', async (req, res) => {
     const query = `
       SELECT DISTINCT ON (sn)
         sn,
-        history_station_start_time AS pass_time
+        pass_time
       FROM (
         SELECT DISTINCT ON (sn)
           sn,
@@ -127,7 +127,7 @@ router.post('/pass-check', async (req, res) => {
       ) as combined
       ORDER BY
         sn,
-        history_station_start_time DESC;
+        pass_time DESC;
     `;
 
     const params = [sns, startDate, endDate, passCheck];
@@ -158,7 +158,7 @@ router.post('/sn-check', async (req, res) => {
       SELECT DISTINCT ON (sn)
         sn,
         pn,
-        history_station_start_time AS pass_time
+        pass_time
       FROM (
         SELECT DISTINCT ON (sn)
           sn,
@@ -182,7 +182,7 @@ router.post('/sn-check', async (req, res) => {
       ) as combined
       ORDER BY
         sn,
-        history_station_start_time DESC;
+        pass_time DESC;
     `;
 
     const params = [sns, startDate, endDate];
