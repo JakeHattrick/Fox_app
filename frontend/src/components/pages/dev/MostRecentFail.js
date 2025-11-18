@@ -158,18 +158,16 @@ export const MostRecentFail = () => {
     }, {});
     const snup =snData.reduce((acc, row) => {
       acc[row.sn] = row;
+      //console.log(acc);
       return acc;
     }, {});
-    const snpn = snData.reduce((acc, row) => {
-      acc[row.pn] = row;
-      return acc;
-    },{});
 
     return csvData.map(row => {
       const match = lookup[row.sn];
       const check = checkup[row.sn];
       const sn = snup[row.sn];
-      const pn = snpn[row.sn];
+      const pn = snup[row.sn]?.pn;
+      //console.log(snup[row.sn]);
       return {
         ...row,
         pn: pn ? pn : 'NA',
@@ -190,12 +188,13 @@ export const MostRecentFail = () => {
         try {
           const rows = [];
           mergedDate.forEach((row) => {
-              rows.push([row[`sn`],row[`error_code`]
+              rows.push([row[`sn`],row[`pn`],row[`error_code`]
                 , row['fail_time']
               ]);
           });
           const headers = [
             'Serial Number',
+            'Part Number',
             'Error Code',
             'Last Fail/Pass Time'
           ];

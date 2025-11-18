@@ -43,11 +43,29 @@ router.post('/most-recent-fail', async (req, res) => {
         sn,
         failure_reasons AS error_code,
         history_station_start_time AS fail_time
-      FROM testboard_master_log
-      WHERE sn = ANY($1)
-        AND history_station_start_time >= $2
-        AND history_station_end_time <= $3
-        AND history_station_passing_status = 'Fail'
+      FROM (
+        SELECT
+          sn,
+          failure_reasons AS error_code,
+          history_station_start_time AS fail_time
+        FROM testboard_master_log
+        WHERE sn = ANY($1)
+          AND history_station_start_time >= $2
+          AND history_station_end_time   <= $3
+          AND history_station_passing_status = 'Fail'
+
+        UNION ALL
+
+        SELECT
+          sn,
+          failure_reasons AS error_code,
+          history_station_start_time AS fail_time
+        FROM workstation_master_log
+        WHERE sn = ANY($1)
+          AND history_station_start_time >= $2
+          AND history_station_end_time   <= $3
+          AND history_station_passing_status = 'Fail'
+      ) AS combined
       ORDER BY
         sn,
         history_station_start_time DESC;
@@ -84,12 +102,29 @@ router.post('/pass-check', async (req, res) => {
       SELECT DISTINCT ON (sn)
         sn,
         history_station_start_time AS pass_time
-      FROM testboard_master_log
-      WHERE sn = ANY($1)
-        AND history_station_start_time >= $2
-        AND history_station_end_time <= $3
-        AND history_station_passing_status = 'Pass'
-        AND workstation_name = ANY($4)
+      FROM (
+        SELECT DISTINCT ON (sn)
+          sn,
+          history_station_start_time AS pass_time
+        FROM testboard_master_log
+        WHERE sn = ANY($1)
+          AND history_station_start_time >= $2
+          AND history_station_end_time <= $3
+          AND history_station_passing_status = 'Pass'
+          AND workstation_name = ANY($4)
+        
+        UNION ALL
+
+        SELECT DISTINCT ON (sn)
+          sn,
+          history_station_start_time AS pass_time
+        FROM workstation_master_log
+        WHERE sn = ANY($1)
+          AND history_station_start_time >= $2
+          AND history_station_end_time <= $3
+          AND history_station_passing_status = 'Pass'
+          AND workstation_name = ANY($4)
+      ) as combined
       ORDER BY
         sn,
         history_station_start_time DESC;
@@ -124,10 +159,27 @@ router.post('/sn-check', async (req, res) => {
         sn,
         pn,
         history_station_start_time AS pass_time
-      FROM testboard_master_log
-      WHERE sn = ANY($1)
-        AND history_station_start_time >= $2
-        AND history_station_end_time <= $3
+      FROM (
+        SELECT DISTINCT ON (sn)
+          sn,
+          pn,
+          history_station_start_time AS pass_time
+        FROM testboard_master_log
+        WHERE sn = ANY($1)
+          AND history_station_start_time >= $2
+          AND history_station_end_time <= $3
+        
+        UNION ALL
+
+        SELECT DISTINCT ON (sn)
+          sn,
+          pn,
+          history_station_start_time AS pass_time
+        FROM workstation_master_log
+        WHERE sn = ANY($1)
+          AND history_station_start_time >= $2
+          AND history_station_end_time <= $3
+      ) as combined
       ORDER BY
         sn,
         history_station_start_time DESC;
