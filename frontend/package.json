@@ -1,7 +1,7 @@
 {
   "name": "fox-quality-dashboard",
   "productName": "fox-quality-dashboard",
-  "version": "2.1.12",
+  "version": "2.1.13",
   "description": "Quality Dashboard for Fox Manufacturing",
   "main": ".webpack/main",
   "scripts": {
@@ -13,7 +13,7 @@
     "generate-icons": "electron-icon-builder --input=./src/assets/icons/fox-icon-256.png --output=build --flatten"
   },
   "keywords": [],
-  "author": "darvin",
+  "author": "Jake",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.27.1",

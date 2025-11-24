@@ -7,6 +7,7 @@ import { DateRange } from '../../pagecomp/DateRange.jsx';
 import { getInitialStartDate, normalizeDate } from '../../../utils/dateUtils.js';
 import { importQuery } from '../../../utils/queryUtils.js';
 import { exportSecureCSV } from '../../../utils/exportUtils.js';
+import { FixedSizeList as List } from 'react-window';
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 if (!API_BASE) {
@@ -177,62 +178,166 @@ export const MostRecentFail = () => {
     });
   }, [csvData, codeData, passData]);
 
-    const [exportCooldown, setExportCooldown] = useState(false);
+  const [exportCooldown, setExportCooldown] = useState(false);
 
-    const getTimestamp = () => {
-        const now = new Date();
-        return now.toISOString().replace(/:/g, '-').replace(/\..+/, '');
-    };
+  const getTimestamp = () => {
+      const now = new Date();
+      return now.toISOString().replace(/:/g, '-').replace(/\..+/, '');
+  };
 
-    const exportToCSV = useCallback(() => { 
-        try {
-          const rows = [];
-          mergedDate.forEach((row) => {
-              rows.push([row[`sn`],row[`pn`],row[`error_code`]
-                , row['fail_time']
-              ]);
-          });
-          const headers = [
-            'Serial Number',
-            'Part Number',
-            'Error Code',
-            'Last Fail/Pass Time'
-          ];
-          const filename = `most_recent_fail_data_${passCheck?passCheck+'_':''}${getTimestamp()}.csv`;
-          // Use secure export function
-          exportSecureCSV(rows, headers, filename);
-        } 
-        catch (error) {
-          console.error('Export failed:', error);
-          alert('Export failed. Please try again.');
-        };
-    }, [mergedDate]);
-
-    function handleExportCSV() {
-        if (exportCooldown) return;
-        setExportCooldown(true);
-        try {
-        exportToCSV();
-        } catch(err) {
-        console.error(err);
-        alert('Export failed');
-        } finally {
-        // always clear cooldown
-        setTimeout(()=>setExportCooldown(false),3000);
-        }
-    }
-
-    const getBG = (status) => {
-      const key = String(status || '').toLowerCase();
-
-      const MAP = {
-        passed: theme.palette.mode === 'dark'? theme.palette.info.dark:theme.palette.info.light,
-        pending: theme.palette.mode === 'dark'? '#A29415':'#E9DB5D',
-        missing: theme.palette.mode === 'dark'? '#e65100':'#ff9800',
+  const exportToCSV = useCallback(() => { 
+      try {
+        const rows = [];
+        mergedDate.forEach((row) => {
+            rows.push([row[`sn`],row[`pn`],row[`error_code`]
+              , row['fail_time']
+            ]);
+        });
+        const headers = [
+          'Serial Number',
+          'Part Number',
+          'Error Code',
+          'Last Fail/Pass Time'
+        ];
+        const filename = `most_recent_fail_data_${passCheck?passCheck+'_':''}${getTimestamp()}.csv`;
+        // Use secure export function
+        exportSecureCSV(rows, headers, filename);
+      } 
+      catch (error) {
+        console.error('Export failed:', error);
+        alert('Export failed. Please try again.');
       };
+  }, [mergedDate]);
 
-      return MAP[key] || (theme.palette.mode === 'dark'? theme.palette.error.dark:theme.palette.error.light);
+  function handleExportCSV() {
+      if (exportCooldown) return;
+      setExportCooldown(true);
+      try {
+      exportToCSV();
+      } catch(err) {
+      console.error(err);
+      alert('Export failed');
+      } finally {
+      // always clear cooldown
+      setTimeout(()=>setExportCooldown(false),3000);
+      }
+  }
+
+  const getBG = (status) => {
+    const key = String(status || '').toLowerCase();
+
+    const MAP = {
+      passed: theme.palette.mode === 'dark'? theme.palette.info.dark:theme.palette.info.light,
+      pending: theme.palette.mode === 'dark'? '#A29415':'#E9DB5D',
+      missing: theme.palette.mode === 'dark'? '#e65100':'#ff9800',
     };
+
+    return MAP[key] || (theme.palette.mode === 'dark'? theme.palette.error.dark:theme.palette.error.light);
+  };
+
+  const VirtualizedResults = ({ rows, height = 520, rowHeight = 32 }) => {
+    const fields = [
+      { key: 'sn',        label: 'Serial Number' },
+      { key: 'pn',        label: 'Part Number' },
+      { key: 'error_code',label: 'Error Code' },
+      { key: 'fail_time', label: 'Last Fail/Pass Time' },
+    ];
+
+    const colMin = 180; // min px per column
+    const gridMinWidth = fields.length * colMin;
+    const colTemplate = `repeat(${fields.length}, minmax(${colMin}px, 1fr))`;
+
+    const Row = ({ index, style }) => {
+      const row = rows[index];
+      if (!row) return null;
+
+      return (
+        <Box
+          role="row"
+          style={style}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: colTemplate,
+            alignItems: 'center',
+            borderBottom: '1px solid #eee',
+            px: 1,
+            whiteSpace: 'nowrap',
+            backgroundColor: getBG(row.error_code),
+          }}
+        >
+          {fields.map((f) => (
+            <Box
+              key={f.key}
+              role="cell"
+              sx={{
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                pr: 1,
+                fontFamily: 'monospace',
+              }}
+              title={row[f.key] != null ? String(row[f.key]) : ''}
+            >
+              {row[f.key] != null ? String(row[f.key]) : ''}
+            </Box>
+          ))}
+        </Box>
+      );
+    };
+
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          overflow: 'auto',
+          border: '1px solid #ddd',
+          borderRadius: 1,
+          mt: 2,
+        }}
+      >
+        {/* sticky header */}
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1,
+            backgroundColor: 'grey.100',
+            borderBottom: '1px solid #ddd',
+          }}
+        >
+          <Box
+            role="row"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: colTemplate,
+              fontWeight: 'bold',
+              px: 1,
+              py: 1,
+              minWidth: gridMinWidth,
+            }}
+          >
+            {fields.map((f) => (
+              <Box key={f.key} role="columnheader" sx={{ pr: 1 }}>
+                {f.label}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* virtualized body */}
+        <Box sx={{ height, minWidth: gridMinWidth }}>
+          <List
+            height={height}
+            itemCount={rows.length}
+            itemSize={rowHeight}
+            width="100%"
+          >
+            {Row}
+          </List>
+        </Box>
+      </Box>
+    );
+  };
 
   return (
     <Box>
@@ -288,9 +393,7 @@ export const MostRecentFail = () => {
             <Typography>Pending: {mergedDate.filter(i=>i.error_code==="Pending").length}</Typography>
             <Typography>Missing: {mergedDate.filter(i=>i.error_code==="Missing").length}</Typography>
           </Box>
-          {mergedDate.map(row => (
-              <Typography sx={{backgroundColor:getBG(row['error_code'])}}>{row['sn']}: {row['pn']}: {row['error_code']}: {row['fail_time']}</Typography>
-          ))}
+          <VirtualizedResults rows={mergedDate}/>
         </>
       ) : (
         <Typography>No data available. Import a CSV to get started.</Typography>
