@@ -47,7 +47,8 @@ router.post('/most-recent-fail', async (req, res) => {
         SELECT
           sn,
           failure_reasons AS error_code,
-          history_station_start_time AS fail_time
+          history_station_start_time AS fail_time,
+          1 as priority
         FROM testboard_master_log
         WHERE sn = ANY($1)
           AND history_station_start_time >= $2
@@ -59,7 +60,8 @@ router.post('/most-recent-fail', async (req, res) => {
         SELECT
           sn,
           'EC-WS' AS error_code,
-          history_station_start_time AS fail_time
+          history_station_start_time AS fail_time,
+          2 as priority
         FROM workstation_master_log
         WHERE sn = ANY($1)
           AND history_station_start_time >= $2
@@ -68,7 +70,8 @@ router.post('/most-recent-fail', async (req, res) => {
       ) AS combined
       ORDER BY
         sn,
-        fail_time DESC;
+        fail_time DESC,
+        priority;
     `;
 
     const params = [sns, startDate, endDate];

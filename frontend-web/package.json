@@ -15,7 +15,7 @@
     "quality",
     "manufacturing"
   ],
-  "author": "darvin",
+  "author": "Jake Hatcher",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.27.1",
