@@ -137,9 +137,12 @@ export const MostRecentFail = () => {
   function cleanCode(code){
     if(code==='Pass')return;
     try{
-        const newCode = code.slice(-3);
+        let newCode = code.slice(-3);
         if (newCode.length<3)return('NA');
-        if (newCode==='_na')return('NA');
+        if (newCode==='_na'){
+          newCode = code.slice(-6,-3);
+          if (newCode.length<3)return('NA');
+        };
         return('EC'+newCode);
     }catch(err) {
         console.error(err);

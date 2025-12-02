@@ -25,6 +25,12 @@ export const TestStationChart = memo(({ label, data ,loading}) => {
       )
     }
 
+    const filteredData = Array.isArray(data)?
+      data.filter(item => {
+        const station = item?.station ?? '';
+        return station !== 'TCP' && !station.includes('_');
+      }):[];
+
     return (
       <Paper sx={paperStyle}>
           <Box sx={flexStyle}>
@@ -38,7 +44,7 @@ export const TestStationChart = memo(({ label, data ,loading}) => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={data}
+                  data={filteredData}
                   margin={{
                     top: 8,
                     right: 8,
