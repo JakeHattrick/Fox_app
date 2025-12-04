@@ -44,7 +44,8 @@ const MENU_ITEMS_QUALITY = [
   ]},
   { text: 'Performance', icon: <SpeedIcon />, children:[
     { text: 'Quality Control Charts', icon: <SpeedIcon />, route: '/performance' },
-    { text: 'Throughput', icon: <TrendingUpIcon />, route: '/throughput' }
+    { text: 'Throughput', icon: <TrendingUpIcon />, route: '/throughput' },
+    { text: 'Xbar-R Chart', icon: <SpeedIcon />, route: '/xbar-r-chart' },
   ]},
   { text: 'Utility Reports', icon: <SpeedIcon />, children:[
     { text: 'Most Recent Fail', icon: <AccessTimeIcon />, route: '/most-recent-fail'}

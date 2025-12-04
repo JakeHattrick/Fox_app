@@ -281,4 +281,43 @@ router.post('/fail-check', async (req, res) => {
   }
 });
 
+router.post('/x-bar-r', async (req, res) => {
+  try {
+    const { ec, startDate, endDate } = req.body;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json({ error: 'Missing required query parameters: startDate, endDate' });
+    }
+    if(!ec){
+      return res.status(400).json({error: ' Missing require query parameters: Error Code'});
+    }
+
+    const query = `
+      SELECT
+          history_station_start_time::date AS date,
+          COUNT(*) FILTER (
+              WHERE RIGHT(failure_reasons, 3) = $1
+          ) AS error_code_count,
+          COUNT(*) AS test_count
+      FROM testboard_master_log
+      WHERE
+          history_station_start_time >= $2
+          AND history_station_start_time <  $3
+      GROUP BY
+          1
+      ORDER BY
+          date;
+    `;
+
+    const params = [ec, startDate, endDate];
+    const result = await pool.query(query, params);
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('fail-check:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router; 
