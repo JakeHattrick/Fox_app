@@ -4,7 +4,7 @@ import { useTheme, Paper, Box, Typography, CircularProgress } from '@mui/materia
 // Styles
 import { paperStyle, flexStyle, typeStyle, boxStyle } from '../theme/themes.js';
 
-export const TestStationChart = memo(({ label, data ,loading}) => {
+export const TestStationChart = memo(({ label, data ,loading, filter = ['TPC']}) => {
     const theme = useTheme();
     const textColor = theme.palette.mode === 'dark' ? '#fff' : '#000';
     
@@ -28,7 +28,9 @@ export const TestStationChart = memo(({ label, data ,loading}) => {
     const filteredData = Array.isArray(data)?
       data.filter(item => {
         const station = item?.station ?? '';
-        return station !== 'TCP' && !station.includes('_');
+        if (!station) return false;
+        if(station.includes('_')) return false;
+        return !filter.includes(station);
       }):[];
 
     return (

@@ -82,8 +82,8 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
             endDate: point.lastDate,
             xi: point.xi,
             ri: point.ri,
-            isOutOfControlX: xi > stats.uclx || xi < stats.lclx,
-            isOutOfControlR: ri > stats.uclr || xi < stats.lclr,
+            isOutOfControlX: point.xi > stats.uclx || point.xi < stats.lclx,
+            isOutOfControlR: point.ri > stats.uclr || point.ri < stats.lclr,
             sampleSize: point.subgroup.length,
             sampleData: point.subgroup
         };
@@ -137,7 +137,7 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
         labels: labels,
         datasets: [
             { label: isX ? 'X - Bar' : 'R - Range',
-                data: processedData.map(point => (isX ? point.xi : point.ri) * 100),
+                data: processedData.map(point => (isX ? point.xi : point.ri)),
                 borderColor: '#1976d2',
                 backgroundColor: processedData.map(point => 
                 (isX ? point.isOutOfControlX : point.isOutOfControlR) ? '#d32f2f' : '#1976d2'
@@ -149,7 +149,7 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
                 showLine: true,
             },
             { label: 'UCL',
-                data: Array(labels.length).fill((isX ? stats.uclx : stats.uclr) * 100),
+                data: Array(labels.length).fill((isX ? stats.uclx : stats.uclr)),
                 borderColor: '#ff9800',
                 borderWidth: 2,
                 pointRadius: 0,
@@ -157,14 +157,14 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
                 fill: false,
             },
             { label: isX ? 'X Bar (x̄)' : 'Center Line (R̄)',
-                data: Array(labels.length).fill((isX ? stats.xbar : stats.clr) * 100),
+                data: Array(labels.length).fill((isX ? stats.xbar : stats.clr)),
                 borderColor: '#4caf50',
                 borderWidth: 2,
                 pointRadius: 0,
                 fill: false,
             },
             { label: 'LCL',
-                data: Array(labels.length).fill((isX ? stats.lclx : stats.lclr) * 100),
+                data: Array(labels.length).fill((isX ? stats.lclx : stats.lclr)),
                 borderColor: '#ff9800',
                 borderWidth: 2,
                 pointRadius: 0,
@@ -216,7 +216,7 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
                 color: theme.palette.text.primary
                 },
                 beginAtZero: true,
-                max: Math.max(stats.UCL * 100, ...processedData.map(p => p.proportion * 100)) * 1.1,
+                max: Math.max(isX ? stats.uclx : stats.uclr, ...processedData.map(p => (isX ? p.xi : p.ri))) * 1.1,
                 grid: {
                 display: true,
                 color: '#f0f0f0'
@@ -256,14 +256,14 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
 
     const outOfControlCount = processedData.filter(p => isX ? p.isOutOfControlX : p.isOutOfControlR).length;
   
-    const selectedPointRows = [
+    const selectedPointRows = selectedPoint ? [
         { 
             label: isX ? 'x̄ (X Bar)' : 'R (Range)', 
-            value: `${(selectedPoint.value * 100).toFixed(2)}%` },
+            value: `${(selectedPoint.value).toFixed(2)}%` },
         { label: 'Sample Size',      value: `${selectedPoint?.sampleSize} parts`       },
-        { label: 'Sample Values',          value: selectedPoint?.sampleData                   },
-        { label: 'UCL',              value: `${(selectedPoint?.ucl * 100).toFixed(2)}%` },
-        { label: 'LCL',              value: `${(selectedPoint?.lcl * 100).toFixed(2)}%` },
+        //{ label: 'Sample Values',          value: selectedPoint?.sampleData                   },
+        { label: 'UCL',              value: `${(selectedPoint?.ucl).toFixed(2)}%` },
+        { label: 'LCL',              value: `${(selectedPoint?.lcl).toFixed(2)}%` },
         {
             label: 'Status',
             value: selectedPoint?.isOutOfControl ? 'OUT OF CONTROL' : 'In Control',
@@ -272,7 +272,7 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
                 fontWeight: 'bold'
             }
         }
-    ];
+    ]:[];
 
     return (
         <Box>        
@@ -286,13 +286,12 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
                 borderRadius: 1
             }}>
                 <Typography variant="body2">
-                    <strong>{`Average ${isX ? 'X Bar':'R Range'}:`}</strong> { ((isX ? stats.xi : stats.ri) * 100).toFixed(2)}%
+                    <strong>{`Average ${isX ? 'X Bar':'R Range'}:`}</strong> { ((isX ? stats.xbar : stats.clr)).toFixed(2)}%
                 </Typography>
                 <Typography variant="body2">
                     <strong>Out of Control Points:</strong> {outOfControlCount}/{processedData.length}
                 </Typography>
             </Box>
-        
         
             <Header
                 title={title}

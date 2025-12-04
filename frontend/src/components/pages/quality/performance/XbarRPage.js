@@ -6,9 +6,10 @@ import { Box, Container, Typography, Card, CardContent, Grid, FormControl,
 
 import { Header } from '../../../pagecomp/Header';
 import { getInitialStartDate, normalizeDate } from '../../../../utils/dateUtils';
-import { XbarRChart } from '../../../charts/XbarRChart';
+import XbarRChart from '../../../charts/XbarRChart';
 import { DateRange } from '../../../pagecomp/DateRange';
 import { NumberRange } from '../../../pagecomp/NumberRange';
+import { gridStyle } from '../../../theme/themes.js';
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -29,7 +30,8 @@ const XbarRPage = () => {
     const [data, setData] = useState([]);
 
 
-    const handleQuery = useCallback(async () => {
+    const handleQuery = async () => {
+        console.log(sampleNumber);
         try {
             setLoading(true);
 
@@ -61,7 +63,11 @@ const XbarRPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [errorCode, startDate, endDate]);
+    };
+
+    useEffect(() => {
+        handleQuery();
+    },[errorCode, workStation, startDate, endDate]);
 
     useEffect(() =>{
         console.log('data fetched:')
@@ -72,7 +78,7 @@ const XbarRPage = () => {
         // Transform data from date, value x, value y to date, value x/value y
         return data.map(item=> ({
             date: item.date,
-            value: item.error_code_count/item.test_count * 1000
+            value: item.error_code_count/item.test_count * 100
         }))
     },[data])
     
@@ -119,11 +125,27 @@ const XbarRPage = () => {
                         onChange={(e) => setWorkStation(e.target.value)}
                         size = 'small'
                     />
-                    
-                    <Button onClick={handleQuery} variant="contained" size="small">
-                        Query
-                    </Button>
                 </Stack>
+            </Box>
+            <Box sx={gridStyle}>
+                <Paper sx={{ p: 2, mb: 4 }}>
+                    <XbarRChart
+                        title="X Bar Chart"
+                        subtitle={`Error Code: ${errorCode} | Station: ${workStation} | Sample Size: ${sampleNumber} | Date Range: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`}
+                        data={structuredData}
+                        subSize={sampleNumber}
+                        isX={true}
+                    />
+                </Paper>
+                <Paper sx={{ p: 2, mb: 4 }}>
+                    <XbarRChart
+                        title="R Range Chart"
+                        subtitle={`Error Code: ${errorCode} | Station: ${workStation} | Sample Size: ${sampleNumber} | Date Range: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`}
+                        data={structuredData}
+                        subSize={sampleNumber}
+                        isX={false}
+                    />
+                </Paper>
             </Box>
         </Container>
     );

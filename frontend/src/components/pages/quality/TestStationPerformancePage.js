@@ -175,11 +175,15 @@ export const TestStationPerformancePage = () => {
         <TestStationChart 
           label={"SXM4 Test Station Performance"}
           data={testStationDataSXM4} 
-          loading={loading}/>
+          loading={loading}
+          filter = {['TPC','EFT','IST','PHT','CHIFLASH','FLB','FLC']}
+          />
         <TestStationChart 
           label="SXM5 Test Station Performance"
           data={testStationDataSXM5}
-          loading={loading} />
+          loading={loading} 
+          filter = {['TPC','IST2','TEST']}
+          />
         <TestStationChart 
           label="SXM6 Test Station Performance"
           data={testStationDataSXM6}
