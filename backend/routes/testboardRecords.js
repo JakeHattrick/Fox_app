@@ -283,7 +283,7 @@ router.post('/fail-check', async (req, res) => {
 
 router.post('/x-bar-r', async (req, res) => {
   try {
-    const { ec, startDate, endDate } = req.body;
+    const { ec, startDate, endDate, station } = req.body;
 
     if (!startDate || !endDate) {
       return res
@@ -292,6 +292,9 @@ router.post('/x-bar-r', async (req, res) => {
     }
     if(!ec){
       return res.status(400).json({error: ' Missing require query parameters: Error Code'});
+    }
+    if(!station){
+      return res.status(400).json({error: ' Missing require query parameters: Station'});
     }
 
     const query = `
@@ -305,17 +308,18 @@ router.post('/x-bar-r', async (req, res) => {
       WHERE
           history_station_start_time >= $2
           AND history_station_start_time <  $3
+          and workstation_name = $4
       GROUP BY
           1
       ORDER BY
           date;
     `;
 
-    const params = [ec, startDate, endDate];
+    const params = [ec, startDate, endDate, station];
     const result = await pool.query(query, params);
     return res.json(result.rows);
   } catch (error) {
-    console.error('fail-check:', error);
+    console.error('x-bar-r:', error);
     return res.status(500).json({ error: error.message });
   }
 });

@@ -21,7 +21,8 @@ const XbarRPage = () => {
     const handleEndDateChange = useCallback((date) => {
     setEndDate(normalizeDate.end(date));
     }, []);
-    const [errorCode, setErrorCode] = useState('');
+    const [errorCode, setErrorCode] = useState('445');
+    const [workStation, setWorkStation] = useState('BAT');
     const [sampleNumber, setSampleNumber] = useState(6);
 
     const [loading, setLoading] = useState(true);
@@ -41,6 +42,7 @@ const XbarRPage = () => {
                 ec: errorCode,
                 startDate,
                 endDate,
+                station: workStation,
             }),
             });
 
@@ -59,10 +61,25 @@ const XbarRPage = () => {
         } finally {
             setLoading(false);
         }
-        console.log('datat fetched:')
-        console.log(data);
     }, [errorCode, startDate, endDate]);
 
+    useEffect(() =>{
+        console.log('data fetched:')
+        console.log(data);
+    },[data])
+
+    const structuredData = useMemo(() => {
+        // Transform data from date, value x, value y to date, value x/value y
+        return data.map(item=> ({
+            date: item.date,
+            value: item.error_code_count/item.test_count * 1000
+        }))
+    },[data])
+    
+    useEffect(() =>{
+        console.log('data structured:')
+        console.log(structuredData);
+    },[structuredData])
 
 
     return (
@@ -94,6 +111,12 @@ const XbarRPage = () => {
                         label="Input Error Code"
                         value={errorCode}
                         onChange={(e) => setErrorCode(e.target.value)}
+                        size = 'small'
+                    />
+                    <TextField
+                        label="Input Station Name"
+                        value={workStation}
+                        onChange={(e) => setWorkStation(e.target.value)}
                         size = 'small'
                     />
                     
