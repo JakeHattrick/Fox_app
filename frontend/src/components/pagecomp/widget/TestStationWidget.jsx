@@ -13,6 +13,7 @@ import { TestStationChart } from '../../charts/TestStationChart.js';
 import { fetchWorkstationQuery } from '../../../utils/queryUtils.js';
 // Global Settings
 import { useGlobalSettings } from '../../../data/GlobalSettingsContext.js';
+import { ALL_MODELS } from '../../../data/dataTables.js';
 
 // ------------------------------------------------------------
 // Environment / constants
@@ -22,9 +23,9 @@ if (!API_BASE) {
 }
 
 const modelKeys = [
-  { id: 'Tesla SXM4', model: 'Tesla SXM4', key: 'sxm4', filter: ['TPC','EFT','IST','PHT','CHIFLASH','FLB','FLC'] },
-  { id: 'Tesla SXM5', model: 'Tesla SXM5', key: 'sxm5', filter: ['TPC','IST2','TEST'] },
-  { id: 'Tesla SXM6', model: 'SXM6',       key: 'sxm6', filter: [] }
+  { id: 'Tesla SXM4', model: 'Tesla SXM4', key: 'sxm4' },
+  { id: 'Tesla SXM5', model: 'Tesla SXM5', key: 'sxm5' },
+  { id: 'Tesla SXM6', model: 'SXM6',       key: 'sxm6' }
 ];
 
 // ------------------------------------------------------------
@@ -186,7 +187,7 @@ export function TestStationWidget({ widgetId }) {
 
   // ----------------------------------------------------------
   // Render: chart view
-  const filters = modelKeys.find(mk => mk.model === model)?.filter || [];
+  const filters = ALL_MODELS.find(mk => mk.label === model)?.filter || [];
   return (
     <TestStationChart
       label={`${model} Test Station Performance`}

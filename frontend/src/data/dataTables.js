@@ -1,6 +1,7 @@
 export const ALL_MODELS = [
-  { label: 'Tesla SXM4', value: 'SXM4' },
-  { label: 'Tesla SXM5', value: 'SXM5' },
+  { label: 'Tesla SXM4', value: 'SXM4', filter: ['TPC','EFT','IST','PHT','CHIFLASH','FLB','FLC'] },
+  { label: 'Tesla SXM5', value: 'SXM5', filter: ['TPC','IST2','TEST'] },
+  { label: 'Tesla SXM6', value: 'SXM6', filter: []}
 ];
 
 export const sxm4Parts = [

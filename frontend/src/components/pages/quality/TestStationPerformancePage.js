@@ -15,6 +15,7 @@ import { DateRange } from '../../pagecomp/DateRange.jsx';
 import { dataCache } from '../../../utils/cacheUtils.js';
 import { gridStyle } from '../../theme/themes.js';
 import { fetchFixtureQuery, fetchWorkstationQuery } from '../../../utils/queryUtils.js';
+import { ALL_MODELS } from '../../../data/dataTables.js';
 
 const ReadOnlyInput = React.forwardRef((props, ref) => (
   <input {...props} ref={ref} readOnly />
@@ -176,18 +177,20 @@ export const TestStationPerformancePage = () => {
           label={"SXM4 Test Station Performance"}
           data={testStationDataSXM4} 
           loading={loading}
-          filter = {['TPC','EFT','IST','PHT','CHIFLASH','FLB','FLC']}
+          filter = {ALL_MODELS.find(m => m.value === 'SXM4')?.filter || []}
           />
         <TestStationChart 
           label="SXM5 Test Station Performance"
           data={testStationDataSXM5}
           loading={loading} 
-          filter = {['TPC','IST2','TEST']}
+          filter = {ALL_MODELS.find(m => m.value === 'SXM5')?.filter || []}
           />
         <TestStationChart 
           label="SXM6 Test Station Performance"
           data={testStationDataSXM6}
-          loading={loading} />
+          loading={loading} 
+          filter = {ALL_MODELS.find(m => m.value === 'SXM6')?.filter || []}
+          />
         <FixtureFailParetoChart 
           label={"Fixture Performance"}
           data={topFixturesData}
