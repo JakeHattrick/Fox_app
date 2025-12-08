@@ -31,7 +31,7 @@ const XbarRPage = () => {
 
 
     const handleQuery = async () => {
-        console.log(sampleNumber);
+        //console.log(sampleNumber);
         try {
             setLoading(true);
 
@@ -53,7 +53,7 @@ const XbarRPage = () => {
             }
 
             const result = await response.json();
-            console.log('Xbar-R response:', result);
+            //console.log('Xbar-R response:', result);
 
             // Store backend data into state
             setData(result);
@@ -69,10 +69,10 @@ const XbarRPage = () => {
         handleQuery();
     },[errorCode, workStation, startDate, endDate]);
 
-    useEffect(() =>{
-        console.log('data fetched:')
-        console.log(data);
-    },[data])
+    // useEffect(() =>{
+    //     console.log('data fetched:')
+    //     console.log(data);
+    // },[data])
 
     const structuredData = useMemo(() => {
         // Transform data from date, value x, value y to date, value x/value y
@@ -82,10 +82,10 @@ const XbarRPage = () => {
         }))
     },[data])
     
-    useEffect(() =>{
-        console.log('data structured:')
-        console.log(structuredData);
-    },[structuredData])
+    // useEffect(() =>{
+    //     console.log('data structured:')
+    //     console.log(structuredData);
+    // },[structuredData])
 
 
     return (

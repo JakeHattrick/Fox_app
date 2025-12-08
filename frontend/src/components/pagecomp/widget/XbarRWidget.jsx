@@ -66,7 +66,7 @@ export function XbarRWidget({ widgetId }) {
             }
 
             const result = await response.json();
-            console.log('Xbar-R response:', result);
+            //console.log('Xbar-R response:', result);
 
             // Store backend data into state
             setData(result);
@@ -83,10 +83,10 @@ export function XbarRWidget({ widgetId }) {
         handleQuery();
     },[selError, selStation, startDate, endDate, loaded]);
 
-    useEffect(() =>{
-        console.log('data fetched:')
-        console.log(data);
-    },[data])
+    // useEffect(() =>{
+    //     console.log('data fetched:')
+    //     console.log(data);
+    // },[data])
 
     const structuredData = useMemo(() => {
         // Transform data from date, value x, value y to date, value x/value y
@@ -96,10 +96,10 @@ export function XbarRWidget({ widgetId }) {
         }))
     },[data])
     
-    useEffect(() =>{
-        console.log('data structured:')
-        console.log(structuredData);
-    },[structuredData])
+    // useEffect(() =>{
+    //     console.log('data structured:')
+    //     console.log(structuredData);
+    // },[structuredData])
 
     // bootstrap: ensure settings container exists
     useEffect(() => {
