@@ -22,9 +22,9 @@ if (!API_BASE) {
 }
 
 const modelKeys = [
-  { id: 'Tesla SXM4', model: 'Tesla SXM4', key: 'sxm4' },
-  { id: 'Tesla SXM5', model: 'Tesla SXM5', key: 'sxm5' },
-  { id: 'Tesla SXM6', model: 'SXM6',       key: 'sxm6' }
+  { id: 'Tesla SXM4', model: 'Tesla SXM4', key: 'sxm4', filter: ['TPC','EFT','IST','PHT','CHIFLASH','FLB','FLC'] },
+  { id: 'Tesla SXM5', model: 'Tesla SXM5', key: 'sxm5', filter: ['TPC','IST2','TEST'] },
+  { id: 'Tesla SXM6', model: 'SXM6',       key: 'sxm6', filter: [] }
 ];
 
 // ------------------------------------------------------------
@@ -186,11 +186,13 @@ export function TestStationWidget({ widgetId }) {
 
   // ----------------------------------------------------------
   // Render: chart view
+  const filters = modelKeys.find(mk => mk.model === model)?.filter || [];
   return (
     <TestStationChart
       label={`${model} Test Station Performance`}
       data={testStationData}
       loading={loading}
+      filter={filters}
     />
   );
 }

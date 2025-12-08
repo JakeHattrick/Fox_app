@@ -212,7 +212,7 @@ const XbarRChart = ({  data = [], title = "X bar R-Chart", subtitle = "",
             y: {
                 title: {
                 display: true,
-                text: 'Error Rate (%)',
+                text: `Error ${isX ? 'Rate' : 'Range'} (%)`,
                 color: theme.palette.text.primary
                 },
                 beginAtZero: true,
