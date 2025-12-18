@@ -1,6 +1,6 @@
 {
   "name": "fox-quality-dashboard-web",
-  "version": "1.1.56",
+  "version": "2.2.10",
   "description": "Quality Dashboard for Fox Manufacturing - Web Version",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "quality",
     "manufacturing"
   ],
-  "author": "Jake Hatcher",
+  "author": "darvin",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.27.1",
@@ -33,25 +33,30 @@
   "dependencies": {
     "@date-io/date-fns": "^3.2.1",
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.1.0",
-    "@mui/material": "^7.1.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
     "@mui/x-charts": "^8.9.0",
-    "@mui/x-date-pickers": "^8.9.0",
+    "@mui/x-date-pickers": "^8.12.0",
     "@tanstack/react-table": "^8.21.3",
+    "axios": "^1.13.2",
     "chart.js": "^4.5.0",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.19",
+    "idb-keyval": "^6.2.1",
+    "material-react-table": "^3.2.1",
+    "nstall": "^0.2.0",
     "papaparse": "^5.5.3",
+    "path": "^0.12.7",
     "react": "^19.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^8.3.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.0",
+    "react-router-dom": "^7.9.6",
     "react-window": "^1.8.11",
-    "recharts": "^2.15.3",
-    "xlsx": "^0.18.5",
-    "idb-keyval": "^6.2.1"
+    "recharts": "^2.15.4",
+    "xlsx": "^0.18.5"
   },
   "browserslist": {
     "production": [
