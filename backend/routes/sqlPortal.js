@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 const dotenv = require('dotenv');
 
 dotenv.config();
