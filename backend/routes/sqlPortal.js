@@ -12,6 +12,9 @@ dotenv.config();
 #    Version: v1 (October 2025)                   #
 #################################################*/
 
+types.setTypeParser(1114, (val) => val);
+types.setTypeParser(1184, (val) => val);
+
 // Create dedicated read-only connection pool
 const observerPool = new Pool({
     host: process.env.DB_HOST,
