@@ -398,9 +398,9 @@ router.post('/daily-usage', async (req,res) => {
   }
 });
 
-router.post('/station-dive', async (req, res) => {
+router.get('/station-dive', async (req, res) => {
   try {
-    const { startDate, endDate} = req.body;
+    const { startDate, endDate} = req.query;
 
     if (!startDate || !endDate) {
       return res
