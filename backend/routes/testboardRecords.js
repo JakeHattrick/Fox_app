@@ -419,7 +419,7 @@ router.get('/station-dive', async (req, res) => {
 
       FROM testboard_master_log
 
-      where history_station_end_time > $1 and history_station_end_time < $2;
+      where history_station_end_time >= $1 and history_station_end_time <= $2;
     `;
 
     const params = [startDate, endDate];
