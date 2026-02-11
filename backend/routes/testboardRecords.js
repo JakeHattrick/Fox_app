@@ -417,9 +417,9 @@ router.post('/station-dive', async (req, res) => {
         failure_reasons as error_code,
         failure_note as description
 
-      FROM testboard_master_log;
+      FROM testboard_master_log
 
-      where history_station_end_time > $1 and history_station_end_time < $2
+      where history_station_end_time > $1 and history_station_end_time < $2;
     `;
 
     const params = [startDate, endDate];
