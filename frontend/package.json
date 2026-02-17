@@ -1,7 +1,7 @@
 {
   "name": "fox-quality-dashboard",
   "productName": "fox-quality-dashboard",
-  "version": "2.1.21",
+  "version": "2.1.22",
   "description": "Quality Dashboard for Fox Manufacturing",
   "main": ".webpack/main",
   "scripts": {
