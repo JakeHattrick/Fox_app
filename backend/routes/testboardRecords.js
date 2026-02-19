@@ -443,6 +443,7 @@ router.get('/station-dive', async (req, res) => {
         FROM workstation_master_log         -- <-- you MUST put the real table here
         WHERE history_station_end_time >= $1
           AND history_station_end_time <= $2
+          AND workstation_name NOT ILIKE '%REPAIR'
       )
 
       SELECT DISTINCT ON (sn, workstation_name)
