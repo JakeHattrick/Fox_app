@@ -271,6 +271,21 @@ const StationBreakdownPage = () => {
         }));
     }, []);
 
+    const combinedActionPieData = useMemo(() => {
+        const topStations = filteredData.slice(0, itemsPerPage);
+        const actionCounts = {};
+        topStations.forEach(ws => {
+            ws.errorCodes.forEach(ec => {
+                const action = ec.action;
+                actionCounts[action] = (actionCounts[action] || 0) + ec.count;
+            });
+        });
+        return Object.entries(actionCounts).map(([action, count]) => ({
+            status: action,
+            value: count
+        }));
+    }, [filteredData, itemsPerPage]);
+
   // Render
     return (
         <Box p={1}>
@@ -324,6 +339,17 @@ const StationBreakdownPage = () => {
                     loading = {loading}
                 />
             </Box>
+            {combinedActionPieData.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                    <PieChart
+                        label={`Top ${itemsPerPage} Stations — Action Breakdown`}
+                        data={combinedActionPieData}
+                        getPercent={false}
+                        showTag={true}
+                        loading={loading}
+                    />
+                </Box>
+            )}
             <Box sx={{ mt: 2 }}>
                 {filteredData.slice(0, itemsPerPage).map(ws => {
                     const actionPieData = getActionPieData(ws.errorCodes);

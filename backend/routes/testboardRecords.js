@@ -409,18 +409,57 @@ router.get('/station-dive', async (req, res) => {
     }
 
     const query = `
-      SELECT
+      WITH combined AS (
+        SELECT
+          model,
+          sn,
+          workstation_name,
+          history_station_passing_status,
+          failure_reasons AS error_code,
+          failure_note    AS description,
+          history_station_end_time,
+          1 AS prio
+        FROM testboard_master_log
+        WHERE history_station_end_time >= $1
+          AND history_station_end_time <= $2
+
+        UNION ALL
+
+        SELECT
+          NULL::text AS model,              -- or a real model col if this table has it
+          sn,
+          workstation_name,
+          history_station_passing_status,
+          CASE
+            WHEN history_station_passing_status = 'Fail' THEN 'EC-WS'
+            ELSE NULL
+          END AS error_code,
+          CASE
+            WHEN history_station_passing_status = 'Fail' THEN 'Visual Failure'
+            ELSE NULL
+          END AS description,
+          history_station_end_time,
+          2 AS prio
+        FROM workstation_master_log         -- <-- you MUST put the real table here
+        WHERE history_station_end_time >= $1
+          AND history_station_end_time <= $2
+      )
+
+      SELECT DISTINCT ON (sn, workstation_name)
         model,
         sn,
         workstation_name,
         history_station_passing_status,
-        failure_reasons as error_code,
-        failure_note as description
+        error_code,
+        description
+      FROM combined
+      ORDER BY
+        sn,
+        workstation_name,
+        prio,                       -- pick prio=1 rows over prio=2
+        history_station_end_time DESC;
+      `;
 
-      FROM testboard_master_log
-
-      where history_station_end_time >= $1 and history_station_end_time <= $2;
-    `;
 
     const params = [startDate, endDate];
     const result = await pool.query(query, params);
