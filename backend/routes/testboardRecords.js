@@ -422,6 +422,7 @@ router.get('/station-dive', async (req, res) => {
         FROM testboard_master_log
         WHERE history_station_end_time >= $1
           AND history_station_end_time <= $2
+          AND workstation_name <> 'TEST'
 
         UNION ALL
 
