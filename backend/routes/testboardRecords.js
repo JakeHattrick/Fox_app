@@ -444,6 +444,7 @@ router.get('/station-dive', async (req, res) => {
         WHERE history_station_end_time >= $1
           AND history_station_end_time <= $2
           AND workstation_name NOT ILIKE '%REPAIR'
+          AND workstation_name NOT LIKE 'TEST'
       )
 
       SELECT DISTINCT ON (sn, workstation_name)
