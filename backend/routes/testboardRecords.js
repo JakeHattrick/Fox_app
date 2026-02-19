@@ -448,7 +448,7 @@ router.get('/station-dive', async (req, res) => {
           AND workstation_name <> 'TEST'
       )
 
-      SELECT DISTINCT ON (sn, workstation_name)
+      SELECT -- DISTINCT ON (sn, workstation_name)
         model,
         sn,
         workstation_name,
