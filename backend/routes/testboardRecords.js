@@ -426,7 +426,7 @@ router.get('/station-dive', async (req, res) => {
         UNION ALL
 
         SELECT
-          NULL::text AS model,              -- or a real model col if this table has it
+          model,              -- or a real model col if this table has it
           sn,
           workstation_name,
           history_station_passing_status,
