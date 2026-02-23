@@ -462,6 +462,7 @@ router.get('/station-dive', async (req, res) => {
       ORDER BY
         sn,
         workstation_name,
+        error_code,
         prio,                       -- pick prio=1 rows over prio=2
         history_station_end_time DESC;
       `;
