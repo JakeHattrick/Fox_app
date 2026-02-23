@@ -428,7 +428,7 @@ router.get('/station-dive', async (req, res) => {
         UNION ALL
 
         SELECT
-          model,              -- or a real model col if this table has it
+          model,
           sn,
           pn,
           workstation_name,
@@ -438,12 +438,12 @@ router.get('/station-dive', async (req, res) => {
             ELSE NULL
           END AS error_code,
           CASE
-            WHEN history_station_passing_status = 'Fail' THEN 'Visual Failure'
+            WHEN history_station_passing_status = 'Fail' THEN 'Other Failure'
             ELSE NULL
           END AS description,
           history_station_end_time,
           2 AS prio
-        FROM workstation_master_log         -- <-- you MUST put the real table here
+        FROM workstation_master_log         
         WHERE history_station_end_time >= $1
           AND history_station_end_time <= $2
           AND workstation_name NOT ILIKE '%REPAIR'
