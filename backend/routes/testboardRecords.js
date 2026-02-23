@@ -413,6 +413,7 @@ router.get('/station-dive', async (req, res) => {
         SELECT
           model,
           sn,
+          pn,
           workstation_name,
           history_station_passing_status,
           failure_reasons AS error_code,
@@ -429,6 +430,7 @@ router.get('/station-dive', async (req, res) => {
         SELECT
           model,              -- or a real model col if this table has it
           sn,
+          pn,
           workstation_name,
           history_station_passing_status,
           CASE
@@ -451,6 +453,7 @@ router.get('/station-dive', async (req, res) => {
       SELECT -- DISTINCT ON (sn, workstation_name)
         model,
         sn,
+        pn,
         workstation_name,
         history_station_passing_status,
         error_code,

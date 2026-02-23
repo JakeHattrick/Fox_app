@@ -34,11 +34,13 @@ const codeActions = [
     { codes: [511,363,317,229,319,167,321,316,167,320], message: "Scrap" },
     { codes: [139,445,534,538,999,14,6,679,818,600,709,140,541,97,288,1,281,603,280,83,41], message: "Simple / Debug" },
     { codes: [301,539,97], message: "Hard / Component Repair" },
-    { codes: [501], message: "Customer Support Req / Notify Customer" }
+    { codes: [501], message: "Customer Support Req / Notify Customer" },
+    { codes: [1000], message: "Physical Failure / Repair" },
 ];
 
 const getCodeAction = (shortCode) => {
-    const num = Number(shortCode);
+    let num = Number(shortCode);
+    if(shortCode === 'EC-WS' || shortCode === '-WS'){num = 1000}
     const match = codeActions.find(ca => ca.codes.includes(num));
     return match ? match.message : "Other Issue / Failure Analysis";
 };
@@ -83,6 +85,7 @@ const StationBreakdownPage = () => {
             if (item.error_code) {
                 let shortCode = String(item.error_code).slice(-3);
                 if (shortCode === '_na' && item.error_code.length >= 6){ shortCode = String(item.error_code).slice(-6,-3);}
+                if (shortCode === '-WS' && item.error_code.length >= 6){ shortCode = 'EC-WS';}
                 
                 if (!grouped[key].errorCodes[shortCode]) {
                     grouped[key].errorCodes[shortCode] = {
@@ -158,8 +161,11 @@ const StationBreakdownPage = () => {
 
     const chartData = useMemo(() => {
         if (!Array.isArray(filteredData)) return [];
+        //console.log(filteredData);
 
-        return filteredData.map(r => {
+        return filteredData
+        .filter(r => (Number(r.totalFailed) || 0) > 0)
+        .map(r => {
             const pass = Number(r.totalPassed) || 0;
             const fail = Number(r.totalFailed) || 0;
             const total = pass + fail;
