@@ -455,19 +455,24 @@ router.get('/station-dive', async (req, res) => {
           )
       )
 
-      SELECT 
+      SELECT distinct on (sn,workstation_name,error_code)
         model, 
         sn, 
         pn, 
         workstation_name, 
         history_station_passing_status,
         error_code, 
-        description, 
-        history_station_end_time
+        description
       FROM tb
       UNION ALL
-      SELECT model, sn, pn, workstation_name, history_station_passing_status,
-            error_code, description, history_station_end_time
+      SELECT distinct on (sn,workstation_name)
+        model, 
+        sn, 
+        pn, 
+        workstation_name, 
+        history_station_passing_status, 
+        error_code, 
+        description
       FROM ws_only
       ORDER BY sn, workstation_name, history_station_end_time DESC;
     `;
