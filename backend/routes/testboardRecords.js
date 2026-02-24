@@ -409,63 +409,95 @@ router.get('/station-dive', async (req, res) => {
     }
 
     const query = `
-      WITH combined AS (
+      WITH tb AS (
         SELECT
-          model,
-          sn,
-          pn,
-          workstation_name,
-          history_station_passing_status,
-          failure_reasons AS error_code,
-          failure_note    AS description,
-          history_station_end_time,
+          t.model,
+          t.sn,
+          t.pn,
+          t.workstation_name,
+          t.history_station_passing_status,
+          t.failure_reasons AS error_code,
+          t.failure_note    AS description,
+          t.history_station_end_time
+        FROM testboard_master_log t
+        WHERE t.history_station_end_time >= $1
+          AND t.history_station_end_time <= $2
+          AND t.workstation_name <> 'TEST'
+          -- Optional filters to match your CSV checks:
+          -- AND t.workstation_name = $3
+          -- AND t.model = $4
+          -- AND t.history_station_passing_status = 'Fail'
+      ),
+
+      ws_only AS (
+        SELECT
+          w.model,
+          w.sn,
+          w.pn,
+          w.workstation_name,
+          w.history_station_passing_status,
+          CASE
+            WHEN w.history_station_passing_status = 'Fail' THEN 'EC-WS'
+            ELSE NULL
+          END AS error_code,
+          CASE
+            WHEN w.history_station_passing_status = 'Fail' THEN 'Other Failure'
+            ELSE NULL
+          END AS description,
+          w.history_station_end_time
+        FROM workstation_master_log w
+        WHERE w.history_station_end_time >= $1
+          AND w.history_station_end_time <= $2
+          AND w.workstation_name NOT ILIKE '%REPAIR'
+          AND w.workstation_name <> 'TEST'
+          -- Optional filters to match your CSV checks:
+          -- AND w.workstation_name = $3
+          -- AND w.model = $4
+          -- AND w.history_station_passing_status = 'Fail'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM tb t
+            WHERE t.sn = w.sn
+              AND t.workstation_name = w.workstation_name
+              -- Full-row style match (same as your CSV comparison)
+              AND t.history_station_end_time = w.history_station_end_time
+
+              -- Optional: tighten match if needed
+              -- AND t.model = w.model
+              -- AND COALESCE(t.pn, '') = COALESCE(w.pn, '')
+          )
+      ),
+
+      combined AS (
+        SELECT
+          tb.*,
           1 AS prio
-        FROM testboard_master_log
-        WHERE history_station_end_time >= $1
-          AND history_station_end_time <= $2
-          AND workstation_name <> 'TEST'
+        FROM tb
 
         UNION ALL
 
         SELECT
-          model,
-          sn,
-          pn,
-          workstation_name,
-          history_station_passing_status,
-          CASE
-            WHEN history_station_passing_status = 'Fail' THEN 'EC-WS'
-            ELSE NULL
-          END AS error_code,
-          CASE
-            WHEN history_station_passing_status = 'Fail' THEN 'Other Failure'
-            ELSE NULL
-          END AS description,
-          history_station_end_time,
+          ws_only.*,
           2 AS prio
-        FROM workstation_master_log         
-        WHERE history_station_end_time >= $1
-          AND history_station_end_time <= $2
-          AND workstation_name NOT ILIKE '%REPAIR'
-          AND workstation_name <> 'TEST'
+        FROM ws_only
       )
 
-      SELECT DISTINCT ON (sn, workstation_name,error_code)
-        model,
-        sn,
-        pn,
-        workstation_name,
+      SELECT 
+        model, 
+        sn, 
+        pn, 
+        workstation_name, 
         history_station_passing_status,
-        error_code,
-        description
-      FROM combined
-      ORDER BY
-        sn,
-        workstation_name,
-        error_code,
-        prio,                       -- pick prio=1 rows over prio=2
-        history_station_end_time DESC;
-      `;
+        error_code, 
+        description, 
+        history_station_end_time
+      FROM tb
+      UNION ALL
+      SELECT model, sn, pn, workstation_name, history_station_passing_status,
+            error_code, description, history_station_end_time
+      FROM ws_only
+      ORDER BY sn, workstation_name, history_station_end_time DESC;
+    `;
 
 
     const params = [startDate, endDate];
