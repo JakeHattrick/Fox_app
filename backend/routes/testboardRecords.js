@@ -423,10 +423,6 @@ router.get('/station-dive', async (req, res) => {
         WHERE t.history_station_end_time >= $1
           AND t.history_station_end_time <= $2
           AND t.workstation_name <> 'TEST'
-          -- Optional filters to match your CSV checks:
-          -- AND t.workstation_name = $3
-          -- AND t.model = $4
-          -- AND t.history_station_passing_status = 'Fail'
       ),
 
       ws_only AS (
@@ -450,36 +446,13 @@ router.get('/station-dive', async (req, res) => {
           AND w.history_station_end_time <= $2
           AND w.workstation_name NOT ILIKE '%REPAIR'
           AND w.workstation_name <> 'TEST'
-          -- Optional filters to match your CSV checks:
-          -- AND w.workstation_name = $3
-          -- AND w.model = $4
-          -- AND w.history_station_passing_status = 'Fail'
           AND NOT EXISTS (
             SELECT 1
             FROM tb t
             WHERE t.sn = w.sn
               AND t.workstation_name = w.workstation_name
-              -- Full-row style match (same as your CSV comparison)
               AND t.history_station_end_time = w.history_station_end_time
-
-              -- Optional: tighten match if needed
-              -- AND t.model = w.model
-              -- AND COALESCE(t.pn, '') = COALESCE(w.pn, '')
           )
-      ),
-
-      combined AS (
-        SELECT
-          tb.*,
-          1 AS prio
-        FROM tb
-
-        UNION ALL
-
-        SELECT
-          ws_only.*,
-          2 AS prio
-        FROM ws_only
       )
 
       SELECT 
