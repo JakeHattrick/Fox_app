@@ -30,12 +30,12 @@ if (!API_BASE) {
 const maxDescLength = 50;
 
 const codeActions = [
-    { codes: [665,220,143,77,0o3,0o0,551,514,773,516,999,852,12,2], message: "False Failure / Re-Test" },
-    { codes: [511,363,317,229,319,167,321,316,167,320], message: "Scrap" },
-    { codes: [139,445,534,538,999,14,6,679,818,600,709,140,541,97,288,1,281,603,280,83,41], message: "Simple / Debug" },
-    { codes: [301,539,97], message: "Hard / Component Repair" },
+    { codes: [665,220,143,77,0o3,0o0,551,514,773,516,852,12,2], message: "False Failure / Re-Test" },
+    { codes: [511,363,317,229,319,167,321,316,320,97,818,83], message: "Scrap" },
+    { codes: [139,445,534,538,999,14,6,679,600,709,140,541,288,1,281,603,280,41], message: "Simple / Debug" },
+    { codes: [301,539], message: "Hard / Component Repair" },
     { codes: [501], message: "Customer Support Req / Notify Customer" },
-    { codes: [1000], message: "Physical Failure / Repair" },
+    { codes: [1000], message: "Other Issue / Failure Analysis" },
 ];
 
 const getCodeAction = (shortCode) => {
@@ -59,6 +59,7 @@ const StationBreakdownPage = () => {
 
     const [data, setData] = useState([]);
     const [model, setModel] = useState(null);
+    const [part, setPart] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -66,11 +67,12 @@ const StationBreakdownPage = () => {
         const grouped = {};
 
         rawData.forEach(item => {
-            const key = `${item.model}|${item.workstation_name}`;
+            const key = `${item.model}|${item.pn}|${item.workstation_name}`;
             
             if (!grouped[key]) {
                 grouped[key] = {
                     model: item.model,
+                    partNumber: item.pn,
                     workstation: item.workstation_name,
                     totalPassed: 0,
                     totalFailed: 0,
@@ -85,7 +87,7 @@ const StationBreakdownPage = () => {
             if (item.error_code) {
                 let shortCode = String(item.error_code).slice(-3);
                 if (shortCode === '_na' && item.error_code.length >= 6){ shortCode = String(item.error_code).slice(-6,-3);}
-                if (shortCode === '-WS' && item.error_code.length >= 6){ shortCode = 'EC-WS';}
+                if (shortCode === '-WS'){ shortCode = 'EC-WS';}
                 
                 if (!grouped[key].errorCodes[shortCode]) {
                     grouped[key].errorCodes[shortCode] = {
@@ -149,42 +151,65 @@ const StationBreakdownPage = () => {
         if(!Array.isArray(data)) return [];
         return [...new Set(data.map(r => r.model).filter(Boolean))].sort();
     },[data])
+    
+    const partOptions = useMemo(() =>{
+        if(!Array.isArray(data)) return [];
+        const base = (model === '' || model === null) ? data : data.filter(r => r.model === model);
+        return [...new Set(base.map(r => r.partNumber).filter(Boolean))].sort();
+    },[data,model])
 
     const filteredData = useMemo(() =>{
         const base = (model === '' || model === null) ? data : data.filter(r => r.model === model);
-        return [...base].sort((a, b) => {
+        const step = (part === '' || part === null) ? base : base.filter(r => r.partNumber === part);
+        return [...step].sort((a, b) => {
             const aFailed = Number(a.totalFailed) || 0;
             const bFailed = Number(b.totalFailed) || 0;
             return bFailed - aFailed; // desc
         });
-    },[data,model])
+    },[data,model,part])
 
     const chartData = useMemo(() => {
         if (!Array.isArray(filteredData)) return [];
-        //console.log(filteredData);
 
-        return filteredData
-        .filter(r => (Number(r.totalFailed) || 0) > 0)
-        .map(r => {
+        const byStation = {};
+
+        filteredData.forEach((r) => {
+            const station = r.workstation;
+            if (!station) return;
+
             const pass = Number(r.totalPassed) || 0;
             const fail = Number(r.totalFailed) || 0;
-            const total = pass + fail;
 
-            return {
-            station: r.workstation,            // TestStationChart reads item.station
-            pass,                              // item.pass
-            fail,                              // item.fail
-            failurerate: total ? fail / total : 0, // item.failurerate (0–1)
-            };
+            if (!byStation[station]) {
+                byStation[station] = { pass: 0, fail: 0 };
+            }
+
+            byStation[station].pass += pass;
+            byStation[station].fail += fail;
         });
+
+        return Object.entries(byStation)
+            .map(([station, totals]) => {
+                const total = totals.pass + totals.fail;
+                return {
+                    station,
+                    pass: totals.pass,
+                    fail: totals.fail,
+                    failurerate: total ? totals.fail / total : 0,
+                };
+            })
+            .filter(r => r.fail > 0)
+            .sort((a, b) => b.fail - a.fail);
     }, [filteredData]);
 
     useEffect(() => {
         if (model === null && modelOptions.length > 0) {
+            setPart("");
             setModel(modelOptions[0]);
         }
         // if current model disappears after date/model changes, snap to first
         if (model && model !== '' && modelOptions.length > 0 && !modelOptions.includes(model)) {
+            setPart("");
             setModel(modelOptions[0]);
         }
     }, [model, modelOptions]);
@@ -315,7 +340,10 @@ const StationBreakdownPage = () => {
                     size="small"
                     label="Model"
                     value={model??""}
-                    onChange={(e) => setModel(e.target.value)}
+                    onChange={(e) => {
+                        setModel(e.target.value);
+                        setPart("");
+                    }}
                     sx={{ minWidth: 200 }}
                 >
                     <MenuItem value="">
@@ -323,6 +351,24 @@ const StationBreakdownPage = () => {
                     </MenuItem>
 
                     {modelOptions.map(m => (
+                        <MenuItem key={m} value={m}>
+                        {m}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <TextField
+                    select
+                    size="small"
+                    label="Part"
+                    value={part??""}
+                    onChange={(e) => setPart(e.target.value)}
+                    sx={{ minWidth: 200 }}
+                >
+                    <MenuItem value="">
+                        <em>All Part Numbers</em>
+                    </MenuItem>
+
+                    {partOptions.map(m => (
                         <MenuItem key={m} value={m}>
                         {m}
                         </MenuItem>
@@ -340,7 +386,7 @@ const StationBreakdownPage = () => {
             </Box>
             <Box>
                 <TestStationChart
-                    label = {model}
+                    label={`${model}${part === "" || part === null ? "" : ` - ${part}`}`}
                     data = {chartData}
                     loading = {loading}
                 />
@@ -361,7 +407,7 @@ const StationBreakdownPage = () => {
                     const actionPieData = getActionPieData(ws.errorCodes);
                     
                     return (
-                        <Box key={`${ws.model}|${ws.workstation}`} sx={{ mb: 3 }}>
+                        <Box key={`${ws.model}|${ws.partNumber}|${ws.workstation}`} sx={{ mb: 3 }}>
                             <TableContainer
                                 component={Paper}
                                 sx={{ mb: 2, p: 1 }}
