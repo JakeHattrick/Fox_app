@@ -58,21 +58,31 @@ const StationBreakdownPage = () => {
     const [itemsPerPage, setItemsPer] = useState(3);
 
     const [data, setData] = useState([]);
+    const [rawData, setRawData] = useState([]);
+
     const [model, setModel] = useState(null);
     const [part, setPart] = useState(null);
+    const [serial, setSerial]=useState('')
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const transformData = useCallback((rawData) => {
         const grouped = {};
 
-        rawData.forEach(item => {
-            const key = `${item.model}|${item.pn}|${item.workstation_name}`;
+        const filtered = (Array.isArray(serial) && serial.length > 0)
+            ? rawData.filter(item => serial.includes(item.sn))
+            : rawData;
+
+        filtered.forEach(item => {
+            const key = part
+            ? `${item.model}|${item.pn}|${item.workstation_name}`
+            : `${item.model}|${item.workstation_name}`;
             
             if (!grouped[key]) {
                 grouped[key] = {
                     model: item.model,
-                    partNumber: item.pn,
+                    partNumber: part ? item.pn : null,
                     workstation: item.workstation_name,
                     totalPassed: 0,
                     totalFailed: 0,
@@ -115,7 +125,7 @@ const StationBreakdownPage = () => {
                 .filter(ec => ec.error_code.trim().toLowerCase() !== 'nan') // Filter here once
                 .sort((a, b) => b.count - a.count) // Sort here once
         }));
-    }, []);
+    }, [serial,part]);
 
     useEffect(() => {
         let cancelled = false;
@@ -129,6 +139,7 @@ const StationBreakdownPage = () => {
                     const transformed = transformData(result);
                     setData(transformed);
                 }
+                setRawData(result);
             } catch (err) {
                 if (!cancelled) {
                     setError(err);
@@ -145,18 +156,32 @@ const StationBreakdownPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [startDate, endDate]);
+    }, [startDate, endDate,serial]);
 
-    const modelOptions = useMemo(() =>{
-        if(!Array.isArray(data)) return [];
-        return [...new Set(data.map(r => r.model).filter(Boolean))].sort();
-    },[data])
-    
-    const partOptions = useMemo(() =>{
-        if(!Array.isArray(data)) return [];
-        const base = (model === '' || model === null) ? data : data.filter(r => r.model === model);
-        return [...new Set(base.map(r => r.partNumber).filter(Boolean))].sort();
-    },[data,model])
+    useEffect(()=>{
+        setData(transformData(rawData));
+    },[rawData,transformData]);
+
+    const modelOptions = useMemo(() => {
+        if (!Array.isArray(rawData)) return [];
+        return [...new Set(rawData.map(r => r.model).filter(Boolean))].sort();
+    }, [rawData]);
+
+    const partOptions = useMemo(() => {
+        if (!Array.isArray(rawData)) return [];
+        const base = (model === '' || model === null) ? rawData : rawData.filter(r => r.model === model);
+        
+        // Count failures per part
+        const failCounts = {};
+        base.forEach(r => {
+            if (!r.pn) return;
+            if (!failCounts[r.pn]) failCounts[r.pn] = 0;
+            if (r.history_station_passing_status !== 'Pass') failCounts[r.pn]++;
+        });
+
+        return [...new Set(base.map(r => r.pn).filter(Boolean))]
+            .sort((a, b) => (failCounts[b] || 0) - (failCounts[a] || 0));
+    }, [rawData, model]);
 
     const filteredData = useMemo(() =>{
         const base = (model === '' || model === null) ? data : data.filter(r => r.model === model);
@@ -288,6 +313,44 @@ const StationBreakdownPage = () => {
         URL.revokeObjectURL(url);
     }, [filteredData, model]);
 
+    const handleImport = useCallback(() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.style.visibility = 'hidden';
+        document.body.appendChild(input);
+
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const text = event.target.result;
+                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                if (lines.length === 0) return;
+
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                const snIndex = headers.indexOf('sn');
+                if (snIndex === -1) {
+                    alert('CSV must contain a column with header "sn"');
+                    return;
+                }
+
+                const serialList = lines
+                    .slice(1)
+                    .map(line => line.split(',')[snIndex]?.trim())
+                    .filter(Boolean);
+
+                setSerial(serialList);
+            };
+            reader.readAsText(file);
+            document.body.removeChild(input);
+        };
+
+        input.click();
+    }, [])
+
     const getActionPieData = useCallback((errorCodes) => {
         const actionCounts = {};
         
@@ -381,6 +444,13 @@ const StationBreakdownPage = () => {
                     disabled={!filteredData.length}
                 >
                     Export
+                </Button>
+                <Button
+                    variant='contained'
+                    size='small'
+                    onClick={handleImport}
+                >
+                    Import
                 </Button>
 
             </Box>
