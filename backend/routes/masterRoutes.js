@@ -51,7 +51,7 @@ router.get('/master-yield', async (req, res) => {
         )
 
         SELECT
-            sn,
+            --sn,
             pn,
             model,
             to_char(week_of, 'YYYY-MM-DD') AS week_of,
@@ -73,7 +73,7 @@ router.get('/master-yield', async (req, res) => {
 
         FROM combined
         GROUP BY
-            sn,
+            --sn,
             pn,
             model,
             week_of
