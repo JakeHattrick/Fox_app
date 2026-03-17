@@ -62,6 +62,8 @@ router.get('/master-yield', async (req, res) => {
 
             COUNT(*) FILTER (WHERE workstation_name = 'ASSY2')   AS assy2,
             COUNT(*) FILTER (WHERE workstation_name = 'FLA')     AS fla,
+            COUNT(*) FILTER (WHERE workstation_name = 'FLA' AND status = 'Pass')     AS fla_pass,
+            COUNT(*) FILTER (WHERE workstation_name = 'FLA' AND status = 'Fail')     AS fla_pass,
             COUNT(*) FILTER (WHERE workstation_name = 'FCT')     AS fct,
 
             COUNT(*) FILTER (WHERE workstation_name = 'FQC')     AS fqc,
