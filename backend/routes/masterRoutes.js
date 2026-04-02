@@ -24,7 +24,7 @@ router.get('/master-yield', async (req, res) => {
             FROM testboard_master_log
             WHERE history_station_end_time AT Time zone 'America/New_York' >= $1
             AND history_station_end_time AT Time zone 'America/New_York' <  $2
-            --AND workstation_name = ANY(ARRAY['REPAIR','ASSY2','FLA','FCT','FQC','VI1','RECEIVE'])
+            AND (workstation_name = ANY(ARRAY['ASSY2','FLA','FCT','FQC','VI1','RECEIVE']) OR workstation_name ilike '%REPAIR%')
         ),
 
         tb_keys AS MATERIALIZED (
@@ -46,7 +46,7 @@ router.get('/master-yield', async (req, res) => {
             FROM workstation_master_log
             WHERE history_station_end_time AT Time zone 'America/New_York' >= $1
             AND history_station_end_time AT Time zone 'America/New_York' <  $2
-            --AND workstation_name = ANY(ARRAY['REPAIR','ASSY2','FLA','FCT','FQC','VI1','RECEIVE'])
+            AND (workstation_name = ANY(ARRAY['ASSY2','FLA','FCT','FQC','VI1','RECEIVE']) OR workstation_name ilike '%REPAIR%')
         ),
 
         combined AS (
