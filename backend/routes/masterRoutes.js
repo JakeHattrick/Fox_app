@@ -21,10 +21,10 @@ router.get('/master-yield', async (req, res) => {
                 workstation_name,
                 history_station_passing_status AS status,
                 history_station_end_time,
-                date_trunc('week', history_station_end_time AT Time zone 'America/New_York')::date AS week_of
             FROM testboard_master_log
             WHERE history_station_end_time AT Time zone 'America/New_York' >= $1
             AND history_station_end_time AT Time zone 'America/New_York' <  $2
+            AND workstation_name = ANY(ARRAY['REPAIR','ASSY2','FLA','FCT','FQC','VI1','RECEIVE'])
         ),
 
         tb_keys AS MATERIALIZED (
@@ -43,10 +43,10 @@ router.get('/master-yield', async (req, res) => {
                 workstation_name,
                 history_station_passing_status AS status,
                 history_station_end_time,
-                date_trunc('week', history_station_end_time AT Time zone 'America/New_York')::date AS week_of
             FROM workstation_master_log
             WHERE history_station_end_time AT Time zone 'America/New_York' >= $1
             AND history_station_end_time AT Time zone 'America/New_York' <  $2
+            AND workstation_name = ANY(ARRAY['REPAIR','ASSY2','FLA','FCT','FQC','VI1','RECEIVE'])
         ),
 
         combined AS (
@@ -55,7 +55,7 @@ router.get('/master-yield', async (req, res) => {
                 model,
                 workstation_name,
                 status,
-                week_of
+                date_trunc('week', history_station_end_time AT Time zone 'America/New_York')::date AS week_of
             FROM tb
 
             UNION ALL
@@ -65,7 +65,7 @@ router.get('/master-yield', async (req, res) => {
                 w.model,
                 w.workstation_name,
                 w.status,
-                w.week_of
+                date_trunc('week', history_station_end_time AT Time zone 'America/New_York')::date AS week_of
             FROM ws w
             LEFT JOIN tb_keys t
             ON t.sn = w.sn
