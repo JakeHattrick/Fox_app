@@ -65,7 +65,7 @@ router.get('/master-yield', async (req, res) => {
                 w.model,
                 w.workstation_name,
                 w.status,
-                date_trunc('week', history_station_end_time AT Time zone 'America/New_York')::date AS week_of
+                date_trunc('week', w.history_station_end_time AT Time zone 'America/New_York')::date AS week_of
             FROM ws w
             LEFT JOIN tb_keys t
             ON t.sn = w.sn
