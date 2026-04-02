@@ -20,7 +20,7 @@ router.get('/master-yield', async (req, res) => {
                 model,
                 workstation_name,
                 history_station_passing_status AS status,
-                history_station_end_time,
+                history_station_end_time
             FROM testboard_master_log
             WHERE history_station_end_time AT Time zone 'America/New_York' >= $1
             AND history_station_end_time AT Time zone 'America/New_York' <  $2
@@ -42,7 +42,7 @@ router.get('/master-yield', async (req, res) => {
                 model,
                 workstation_name,
                 history_station_passing_status AS status,
-                history_station_end_time,
+                history_station_end_time
             FROM workstation_master_log
             WHERE history_station_end_time AT Time zone 'America/New_York' >= $1
             AND history_station_end_time AT Time zone 'America/New_York' <  $2
