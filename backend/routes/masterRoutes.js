@@ -13,71 +13,96 @@ router.get('/master-yield', async (req, res) => {
     }
 
     const query =
-        `WITH combined AS (
-        -- testboard rows take priority
-        SELECT
-            t.model,
-            t.sn,
-            t.pn,
-            t.workstation_name,
-            t.history_station_passing_status AS status,
-            date_trunc('week', t.history_station_end_time)::date AS week_of
-        FROM testboard_master_log t
-        WHERE t.history_station_end_time >= $1
-            AND t.history_station_end_time <= $2
+        `WITH tb AS MATERIALIZED (
+            SELECT
+                sn,
+                pn,
+                model,
+                workstation_name,
+                history_station_passing_status AS status,
+                history_station_end_time,
+                date_trunc('week', history_station_end_time)::date AS week_of
+            FROM testboard_master_log
+            WHERE history_station_end_time >= $1
+            AND history_station_end_time <  $2
+        ),
 
-        UNION ALL
+        tb_keys AS MATERIALIZED (
+            SELECT DISTINCT
+                sn,
+                workstation_name,
+                history_station_end_time
+            FROM tb
+        ),
 
-        -- workstation rows only when no matching testboard row exists
-        SELECT
-            w.model,
-            w.sn,
-            w.pn,
-            w.workstation_name,
-            w.history_station_passing_status AS status,
-            date_trunc('week', w.history_station_end_time)::date AS week_of
-        FROM workstation_master_log w
-        WHERE w.history_station_end_time >= $1
-            AND w.history_station_end_time <= $2
-            AND NOT EXISTS (
-            SELECT 1
-            FROM testboard_master_log t
-            WHERE t.sn = w.sn
-                AND t.workstation_name = w.workstation_name
-                AND t.history_station_end_time = w.history_station_end_time
-                AND t.history_station_end_time >= $1
-                AND t.history_station_end_time <= $2
-            )
+        ws AS MATERIALIZED (
+            SELECT
+                sn,
+                pn,
+                model,
+                workstation_name,
+                history_station_passing_status AS status,
+                history_station_end_time,
+                date_trunc('week', history_station_end_time)::date AS week_of
+            FROM workstation_master_log
+            WHERE history_station_end_time >= $1
+            AND history_station_end_time <  $2
+        ),
+
+        combined AS (
+            SELECT
+                pn,
+                model,
+                workstation_name,
+                status,
+                week_of
+            FROM tb
+
+            UNION ALL
+
+            SELECT
+                w.pn,
+                w.model,
+                w.workstation_name,
+                w.status,
+                w.week_of
+            FROM ws w
+            LEFT JOIN tb_keys t
+            ON t.sn = w.sn
+            AND t.workstation_name = w.workstation_name
+            AND t.history_station_end_time = w.history_station_end_time
+            WHERE t.sn IS NULL
         )
 
         SELECT
-            --sn,
             pn,
             model,
             to_char(week_of, 'YYYY-MM-DD') AS week_of,
 
-            COUNT(*) FILTER (WHERE workstation_name ILIKE '%REPAIR%')                   AS repair_input,
+            COUNT(*) FILTER (WHERE workstation_name ILIKE '%REPAIR%') AS repair_input,
             COUNT(*) FILTER (WHERE workstation_name ILIKE '%REPAIR%' AND status = 'Pass')  AS repair_output,
             COUNT(*) FILTER (WHERE workstation_name ILIKE '%REPAIR%' AND status = 'Scrap') AS repair_scrap,
 
-            COUNT(*) FILTER (WHERE workstation_name = 'ASSY2')   AS assy2,
-            COUNT(*) FILTER (WHERE workstation_name = 'FLA')     AS fla,
-            COUNT(*) FILTER (WHERE workstation_name = 'FLA' AND status = 'Pass')     AS fla_pass,
-            COUNT(*) FILTER (WHERE workstation_name = 'FLA' AND status = 'Fail')     AS fla_pass,
-            COUNT(*) FILTER (WHERE workstation_name = 'FCT')     AS fct,
+            COUNT(*) FILTER (WHERE workstation_name = 'ASSY2') AS assy2,
 
-            COUNT(*) FILTER (WHERE workstation_name = 'FQC')     AS fqc,
+            COUNT(*) FILTER (WHERE workstation_name = 'FLA') AS fla,
+            COUNT(*) FILTER (WHERE workstation_name = 'FLA' AND status = 'Pass') AS fla_pass,
+            COUNT(*) FILTER (WHERE workstation_name = 'FLA' AND status = 'Fail') AS fla_fail,
+
+            COUNT(*) FILTER (WHERE workstation_name = 'FCT') AS fct,
+
+            COUNT(*) FILTER (WHERE workstation_name = 'FQC') AS fqc,
             COUNT(*) FILTER (WHERE workstation_name = 'FQC' AND status = 'Pass') AS fqc_pass,
             COUNT(*) FILTER (WHERE workstation_name = 'FQC' AND status = 'Fail') AS fqc_fail,
 
-            COUNT(*) FILTER (WHERE workstation_name = 'VI1')     AS vi1,
-            COUNT(*) FILTER (WHERE workstation_name = 'VI1' AND status = 'Pass') AS vi_pass,
-            COUNT(*) FILTER (WHERE workstation_name = 'VI1' AND status = 'Fail') AS vi_Fail,
+            COUNT(*) FILTER (WHERE workstation_name = 'VI1') AS vi1,
+            COUNT(*) FILTER (WHERE workstation_name = 'VI1' AND status = 'Pass') AS vi1_pass,
+            COUNT(*) FILTER (WHERE workstation_name = 'VI1' AND status = 'Fail') AS vi1_fail,
+
             COUNT(*) FILTER (WHERE workstation_name = 'RECEIVE') AS receive
 
         FROM combined
         GROUP BY
-            --sn,
             pn,
             model,
             week_of
