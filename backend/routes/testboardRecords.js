@@ -47,6 +47,7 @@ router.post('/most-recent-fail', async (req, res) => {
           AND history_station_start_time >= $2
           AND history_station_end_time   <= $3
           AND history_station_passing_status = 'Fail'
+          AND workstation_name not ilike '%REPAIR'
 
         UNION ALL
 
@@ -60,6 +61,7 @@ router.post('/most-recent-fail', async (req, res) => {
           AND history_station_start_time >= $2
           AND history_station_end_time   <= $3
           AND history_station_passing_status = 'Fail'
+          AND workstation_name not ilike '%REPAIR'
       ) AS combined
       ORDER BY
         sn,
