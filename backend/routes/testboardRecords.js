@@ -102,10 +102,12 @@ router.post('/pass-check', async (req, res) => {
     const query = `
       SELECT DISTINCT ON (sn)
         sn,
+        workstation_name,
         pass_time
       FROM (
         SELECT
           sn,
+          workstation_name,
           history_station_start_time AS pass_time
         FROM testboard_master_log
         WHERE sn = ANY($1)
@@ -118,6 +120,7 @@ router.post('/pass-check', async (req, res) => {
 
         SELECT
           sn,
+          workstation_name,
           history_station_start_time AS pass_time
         FROM workstation_master_log
         WHERE sn = ANY($1)
@@ -159,11 +162,13 @@ router.post('/sn-check', async (req, res) => {
       SELECT DISTINCT ON (sn)
         sn,
         pn,
+        workstation_name,
         pass_time
       FROM (
         SELECT
           sn,
           pn,
+          workstation_name,
           history_station_start_time AS pass_time
         FROM testboard_master_log
         WHERE sn = ANY($1)
@@ -175,6 +180,7 @@ router.post('/sn-check', async (req, res) => {
         SELECT
           sn,
           pn,
+          workstation_name,
           history_station_start_time AS pass_time
         FROM workstation_master_log
         WHERE sn = ANY($1)
