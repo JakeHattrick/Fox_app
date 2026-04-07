@@ -34,11 +34,13 @@ router.post('/most-recent-fail', async (req, res) => {
     const query = `
       SELECT DISTINCT ON (sn)
         sn,
+        workstation_name,
         error_code,
         fail_time
       FROM (
         SELECT
           sn,
+          workstation_name,
           failure_reasons AS error_code,
           history_station_start_time AS fail_time,
           1 as priority
@@ -53,6 +55,7 @@ router.post('/most-recent-fail', async (req, res) => {
 
         SELECT
           sn,
+          workstation_name,
           'EC-WS' AS error_code,
           history_station_start_time AS fail_time,
           2 as priority
