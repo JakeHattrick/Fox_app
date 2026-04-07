@@ -51,6 +51,7 @@ router.get('/master-yield', async (req, res) => {
 
         combined AS (
             SELECT
+                sn,
                 pn,
                 model,
                 workstation_name,
@@ -61,6 +62,7 @@ router.get('/master-yield', async (req, res) => {
             UNION ALL
 
             SELECT
+                w.sn,
                 w.pn,
                 w.model,
                 w.workstation_name,
@@ -75,6 +77,7 @@ router.get('/master-yield', async (req, res) => {
         )
 
         SELECT
+            sn,
             pn,
             model,
             to_char(week_of, 'YYYY-MM-DD') AS week_of,
