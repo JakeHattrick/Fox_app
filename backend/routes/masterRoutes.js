@@ -106,6 +106,7 @@ router.get('/master-yield', async (req, res) => {
 
         FROM combined
         GROUP BY
+            sn, 
             pn,
             model,
             week_of
