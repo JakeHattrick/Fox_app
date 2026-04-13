@@ -445,6 +445,7 @@ router.get('/station-dive', async (req, res) => {
         WHERE history_station_end_time >= $1
           AND history_station_end_time <= $2
           AND workstation_name <> 'TEST'
+          AND workstation_name NOT LIKE '%REPAIR'
 
         UNION ALL
 
