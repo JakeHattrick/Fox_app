@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Box, TextField, MenuItem, Paper, Typography, TableContainer,
     Table, TableHead, TableRow, TableBody, TableCell, Button
  } from '@mui/material';
@@ -129,34 +129,33 @@ const StationBreakdownPage = () => {
 
     useEffect(() => {
         let cancelled = false;
-        
+
         async function loadData() {
             setLoading(true);
             setError(null);
+
             try {
                 const result = await fetchDiveData(API_BASE, startDate, endDate);
-                if (!cancelled) {
-                    const transformed = transformData(result);
-                    setData(transformed);
-                }
-                setRawData(result);
+
+                if (cancelled) return;
+                setRawData(Array.isArray(result) ? result : []);
             } catch (err) {
-                if (!cancelled) {
-                    setError(err);
-                }
+                if (cancelled) return;
+                setError(err);
+                setRawData([]);
             } finally {
                 if (!cancelled) {
                     setLoading(false);
                 }
             }
         }
-        
+
         loadData();
-        
+
         return () => {
             cancelled = true;
         };
-    }, [startDate, endDate,serial]);
+    }, [startDate, endDate]);
 
     useEffect(()=>{
         setData(transformData(rawData));
