@@ -31,11 +31,11 @@ const maxDescLength = 50;
 
 const codeActions = [
     { codes: [665,220,143,77,0o3,0o0,551,514,773,516,852,12,2], message: "False Failure / Re-Test" },
-    { codes: [511,363,317,229,319,167,321,316,320,97,818,83], message: "Scrap" },
+    { codes: [363,317,229,319,167,321,316,320,97,818,83], message: "Scrap" },
     { codes: [139,445,534,538,999,14,6,679,600,709,140,541,288,1,281,603,280,41], message: "Simple / Debug" },
     { codes: [301,539], message: "Hard / Component Repair" },
     { codes: [501], message: "Customer Support Req / Notify Customer" },
-    { codes: [1000], message: "Other Issue / Failure Analysis" },
+    { codes: [1000, 511], message: "Other Issue / Failure Analysis" },
 ];
 
 const getCodeAction = (shortCode) => {
