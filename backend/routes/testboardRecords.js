@@ -456,8 +456,8 @@ router.get('/station-dive', async (req, res) => {
           w.pn,
           w.workstation_name,
           w.history_station_passing_status,
-          CASE WHEN w.history_station_passing_status = 'Fail' THEN 'EC-WS' ELSE NULL END,
-          CASE WHEN w.history_station_passing_status = 'Fail' THEN 'Other Failure' ELSE NULL END,
+          CASE WHEN w.history_station_passing_status = 'Fail' THEN split_part(w.station_reason,':',1) ELSE NULL END,
+          CASE WHEN w.history_station_passing_status = 'Fail' THEN split_part(w.station_reason,':',2) ELSE NULL END,
           w.history_station_end_time,
           2 AS prio
         FROM workstation_master_log w
